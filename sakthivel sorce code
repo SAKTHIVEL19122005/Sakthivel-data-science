@@ -1,0 +1,542 @@
+import zipfile
+import pandas as pd
+import os
+
+# STEP 1: Upload the ZIP file (for Google Colab)
+from google.colab import files
+uploaded = files.upload()
+
+# STEP 2: Unzip the uploaded file
+zip_path = "movies.csv.zip"  # replace with your filename if different
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+    zip_ref.extractall("extracted_files")  # folder to extract to
+
+# STEP 3: Load the CSV file
+csv_files = [f for f in os.listdir("extracted_files") if f.endswith('.csv')]
+csv_path = os.path.join("extracted_files", csv_files[0])
+df = pd.read_csv(csv_path)
+
+# STEP 4: Display basic info
+print("First few rows of the dataset:")
+print(df.head())
+# 1. General overview
+print("Shape of the dataset:", df.shape)
+print("\nColumn names:", df.columns.tolist())
+print("\nData types:\n", df.dtypes)
+
+# 2. Display first few rows
+print("\nFirst 5 rows:\n", df.head())
+
+# 3. Missing values
+print("\nMissing values per column:\n", df.isnull().sum())
+
+# 4. Summary statistics (numerical)
+print("\nSummary statistics:\n", df.describe())
+
+# 5. Unique values for categorical columns
+categorical_cols = df.select_dtypes(include='object').columns
+for col in categorical_cols:
+    print(f"\nUnique values in '{col}':", df[col].nunique())
+    print(df[col].value_counts().head(5))
+
+# 6. Check for duplicates
+print("\nNumber of duplicate rows:", df.duplicated().sum())
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Sample/mock dataset (replace this with your CSV file)
+data = {
+    'Genres': ['Drama', 'Comedy', 'Action', 'Drama', 'Comedy', 'Action', 'Horror', 'Comedy', 'Drama', 'Horror'],
+    'IMDB_Rating': [7.5, 6.8, 8.2, 7.0, 6.5, 8.0, 5.9, 6.9, 7.2, 5.5],
+    'Year': [2010, 2012, 2015, 2010, 2013, 2015, 2011, 2012, 2010, 2011]
+}
+
+df = pd.DataFrame(data)
+
+# Set style
+sns.set(style="whitegrid")
+plt.rcParams["figure.figsize"] = (10, 5)
+
+# --- Top Genres ---
+if 'Genres' in df.columns:
+    top_genres = df['Genres'].value_counts().head(10)
+    plt.figure()
+    sns.barplot(y=top_genres.index, x=top_genres.values, palette='pastel')
+    plt.title("Top Movie Genres")
+    plt.xlabel("Number of Movies")
+    plt.ylabel("Genre")
+    plt.tight_layout()
+    plt.show()
+
+# --- Rating Distribution ---
+if 'IMDB_Rating' in df.columns:
+    plt.figure()
+    sns.histplot(df['IMDB_Rating'].dropna(), bins=5, kde=True, color='salmon')
+    plt.title("Distribution of Movie Ratings")
+    plt.xlabel("Rating")
+    plt.ylabel("Frequency")
+    plt.tight_layout()
+    plt.show()
+
+# --- Movies Released per Year ---
+if 'Year' in df.columns:
+    year_counts = df['Year'].value_counts().sort_index()
+    plt.figure()
+    sns.lineplot(x=year_counts.index, y=year_counts.values, marker='o', color='steelblue')
+    plt.title("Movies Released Per Year")
+    plt.xlabel("Year")
+    plt.ylabel("Number of Movies")
+    plt.tight_layout()
+    plt.show()
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load data (or use your DataFrame directly)
+# df = pd.read_csv("your_file.csv")
+
+# Sample cleaned dataset (adjust columns as needed)
+df = df.dropna(subset=['IMDB_Rating', 'Genres', 'Year'])
+
+# Features & target
+X = df[['Genres', 'Year']]
+y = df['IMDB_Rating']
+
+# Preprocess categorical features
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('cat', OneHotEncoder(handle_unknown='ignore'), ['Genres'])
+    ],
+    remainder='passthrough'
+)
+
+# Build model pipeline
+model = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', LinearRegression())
+])
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Fit the model
+model.fit(X_train, y_train)
+
+# Predict
+y_pred = model.predict(X_test)
+
+# Evaluation
+print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("R-squared Score:", r2_score(y_test, y_pred))
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# Sample dataset (You can replace this with your actual movie dataset)
+data = {
+    'Genres': ['Drama', 'Comedy', 'Action', 'Drama', 'Comedy', 'Action', 'Horror', 'Comedy', 'Drama', 'Horror'],
+    'IMDB_Rating': [7.5, 6.8, 8.2, 7.0, 6.5, 8.0, 5.9, 6.9, 7.2, 5.5],
+    'Year': [2010, 2012, 2015, 2010, 2013, 2015, 2011, 2012, 2010, 2011]
+}
+
+# Create a DataFrame from the sample data
+df = pd.DataFrame(data)
+
+# Features (input data) and target (IMDB Rating)
+X = df[['Genres', 'Year']]
+y = df['IMDB_Rating']
+
+# Preprocessing for categorical data (OneHotEncoding for Genres)
+preprocessor = ColumnTransformer(
+    transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), ['Genres'])],
+    remainder='passthrough'
+)
+
+# Create a pipeline with preprocessing and regression model (LinearRegression)
+model = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', LinearRegression())
+])
+
+# Train the model
+model.fit
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# Sample dataset (replace this with your actual movie dataset)
+data = {
+    'Genres': ['Drama', 'Comedy', 'Action', 'Drama', 'Comedy', 'Action', 'Horror', 'Comedy', 'Drama', 'Horror'],
+    'IMDB_Rating': [7.5, 6.8, 8.2, 7.0, 6.5, 8.0, 5.9, 6.9, 7.2, 5.5],
+    'Year': [2010, 2012, 2015, 2010, 2013, 2015, 2011, 2012, 2010, 2011]
+}
+
+# Create a DataFrame from the sample data
+df = pd.DataFrame(data)
+
+# Features (input) and target (output)
+X = df[['Genres', 'Year']]
+y = df['IMDB_Rating']
+
+# Preprocessing for categorical data (OneHotEncoding for Genres)
+preprocessor = ColumnTransformer(
+    transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), ['Genres'])],
+    remainder='passthrough'
+)
+
+# Create a pipeline with preprocessing and regression model (LinearRegression)
+model = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', LinearRegression())
+])
+
+# Train the model
+model.fit(X, y)
+
+# Function to predict the IMDB rating for new data
+def predict_rating(genre, year):
+    # Convert input data to DataFrame with the same column names as training data
+    input_data = pd.DataFrame({
+        'Genres': [genre],
+        'Year': [year]
+    })
+
+    # Make prediction using the trained model
+    predicted_rating = model.predict(input_data)
+
+    return predicted_rating[0]
+
+# --- Predict using new user input ---
+# Get genre and year input from the user
+genre_input = input("Enter movie genre (e.g., Drama, Comedy, Action, etc.): ")
+year_input = int(input("Enter movie release year (e.g., 2023): "))
+
+# Make a prediction
+predicted_rating = predict_rating(genre_input, year_input)
+
+# Display the prediction
+print(f"\nPredicted IMDB Rating for '{genre_input}' movie from {year_input}: {predicted_rating:.2f}")
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+
+# Sample dataset (replace this with your actual dataset)
+data = {
+    'Study_Hours': [10, 15, 8, 20, 12, 25, 18, 14, 10, 7],
+    'Assignments_Completed': [9, 10, 8, 10, 7, 9, 9, 6, 10, 5],
+    'Attendance': [90, 95, 85, 98, 88, 92, 93, 80, 95, 75],
+    'Final_Grade': [85, 92, 78, 95, 80, 90, 88, 70, 94, 65]  # Target variable: Final Grade
+}
+
+# Create a DataFrame from the sample data
+df = pd.DataFrame(data)
+
+# Features (input) and target (output)
+X = df[['Study_Hours', 'Assignments_Completed', 'Attendance']]
+y = df['Final_Grade']
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create a model pipeline with preprocessing and regression model
+model = Pipeline(steps=[
+    ('regressor', LinearRegression())  # Using Linear Regression for this example
+])
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Function to predict the final grade for new data
+def predict_final_grade(study_hours, assignments_completed, attendance):
+    # Convert input data to DataFrame
+    input_data = pd.DataFrame({
+        'Study_Hours': [study_hours],
+        'Assignments_Completed': [assignments_completed],
+        'Attendance': [attendance]
+    })
+
+    # Make prediction using the trained model
+    predicted_grade = model.predict(input_data)
+
+    return predicted_grade[0]
+
+# --- Predict using new user input ---
+# Get student details from the user
+study_hours_input = float(input("Enter the number of study hours: "))
+assignments_completed_input = int(input("Enter the number of assignments completed: "))
+attendance_input = float(input("Enter the attendance percentage: "))
+
+# Make a prediction for the final grade
+predicted_grade = predict_final_grade(study_hours_input, assignments_completed_input, attendance_input)
+
+# Display the prediction
+print(f"\nPredicted Final Grade: {predicted_grade:.2f}")
+import joblib
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# Sample dataset (replace with your actual data)
+data = {
+    'Genres': ['Drama', 'Comedy', 'Action', 'Drama', 'Comedy', 'Action', 'Horror', 'Comedy', 'Drama', 'Horror'],
+    'IMDB_Rating': [7.5, 6.8, 8.2, 7.0, 6.5, 8.0, 5.9, 6.9, 7.2, 5.5],
+    'Year': [2010, 2012, 2015, 2010, 2013, 2015, 2011, 2012, 2010, 2011]
+}
+
+# Create a DataFrame
+import pandas as pd
+df = pd.DataFrame(data)
+
+# Features and target
+X = df[['Genres', 'Year']]
+y = df['IMDB_Rating']
+
+# Preprocessor to handle categorical data (OneHotEncoding for Genres)
+preprocessor = ColumnTransformer(
+    transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), ['Genres'])],
+    remainder='passthrough'
+)
+
+# Create pipeline with preprocessor and linear regression
+model = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('regressor', LinearRegression())
+])
+
+# Train the model
+model.fit(X, y)
+
+# Save the trained model
+joblib.dump(model, 'movie_rating_predictor.pkl')
+
+import joblib
+import pandas as pd
+
+# Load the pre-trained model
+model = joblib.load('movie_rating_predictor.pkl')
+
+# Prediction function
+def predict_movie_rating(genre: str, year: int) -> float:
+    """
+    Predicts the IMDB rating for a given movie genre and release year.
+
+    Parameters:
+    - genre (str): The genre of the movie (e.g., 'Action', 'Drama').
+    - year (int): The release year of the movie (e.g., 2020).
+
+    Returns:
+    - float: Predicted IMDB rating.
+    """
+
+    # Convert the input data into a DataFrame
+    input_data = pd.DataFrame({
+        'Genres': [genre],
+        'Year': [year]
+    })
+
+    # Use the model to predict the rating directly
+    # The model already has the preprocessor built-in
+    predicted_rating = model.predict(input_data)
+
+    return predicted_rating[0]
+
+# Example Usage:
+if __name__ == "__main__":
+    # Example inputs
+    genre_input = 'Action'  # You can change this to any genre like 'Drama', 'Comedy', etc.
+    year_input = 2021  # You can change this to any year
+
+    # Get prediction
+    rating = predict_movie_rating(genre_input, year_input)
+
+    # Output the prediction
+    print(f"Predicted IMDB Rating for a '{genre_input}' movie released in {year_input}: {rating:.2f}")
+import pandas as pd
+
+# Load the dataset, either upload it or change path
+try:
+    df = pd.read_csv("movies.csv")  # Try loading the file
+except FileNotFoundError:
+    from google.colab import files  # Import files for upload if not found
+    uploaded = files.upload()  # Upload the file
+    filename = list(uploaded.keys())[0]  # Get the uploaded filename
+    df = pd.read_csv(filename)  # Read the uploaded file
+
+# Display the first few rows
+print("Sample Data:")
+print(df.head(), "\n")
+
+# Show all column names
+print("All Columns:")
+print(df.columns.tolist(), "\n")
+
+# Identify target column (assume 'rating' is the target)
+target = 'rating'
+
+# Identify feature columns (drop target and any non-informative columns)
+features = df.drop(columns=[target, 'title', 'id'], errors='ignore').columns.tolist()
+
+# Output
+print(f"✅ Target column: {target}")
+print(f"✅ Feature columns: {features}")
+import pandas as pd
+
+# Check if 'movies.csv' exists in the current directory
+import os
+if not os.path.exists("movies.csv"):
+    # If not found, try to load from a previous cell or upload
+    try:
+        df = pd.read_csv(filename)  # Assuming 'filename' was defined in a previous upload
+    except NameError:  # If 'filename' doesn't exist, prompt for upload
+        from google.colab import files
+        uploaded = files.upload()
+        filename = list(uploaded.keys())[0]
+        df = pd.read_csv(filename)
+else:
+    # If found, load directly
+    df = pd.read_csv("movies.csv")
+
+
+# Show original data
+print("🎬 Original Data (First 5 rows):")
+print(df.head(), "\n")
+
+# Identify categorical columns
+categorical_cols = df.select_dtypes(include='object').columns.tolist()
+
+print("🧾 Categorical Columns:", categorical_cols)
+
+# One-hot encode categorical columns
+df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
+
+# Show the encoded data
+print("\n🔢 Encoded Data (First 5 rows):")
+print(df_encoded.head())
+
+# Show new columns
+print("\n📊 Columns After Encoding:")
+print(df_encoded.columns.tolist())
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import numpy as np
+
+# Sample data
+data = {
+    'release_year': [2015, 2018, 2020, 2012, 2016],
+    'duration': [120, 90, 150, 110, 100],
+    'rating': [7.5, 6.8, 8.0, 7.0, 6.5]
+}
+
+df = pd.DataFrame(data)
+
+# Features and target
+X = df[['release_year', 'duration']]
+y = df['rating']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict
+y_pred = model.predict(X_test)
+
+# Evaluation metrics
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+# Output
+print("🔮 Predictions:", y_pred)
+print("✅ Actual:", y_test.values)
+print("\n📊 Evaluation Metrics:")
+print(f"MAE  = {mae:.2f}")
+print(f"MSE  = {mse:.2f}")
+print(f"RMSE = {rmse:.2f}")
+print(f"R²   = {r2:.2f}")
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import gradio as gr
+
+# Step 1: Create and prepare the dataset
+data = {
+    'release_year': [2015, 2018, 2020, 2012, 2016],
+    'duration': [120, 90, 150, 110, 100],
+    'rating': [7.5, 6.8, 8.0, 7.0, 6.5]
+}
+
+df = pd.DataFrame(data)
+X = df[['release_year', 'duration']]
+y = df['rating']
+
+# Step 2: Train the model
+model = LinearRegression()
+model.fit(X, y)
+
+# Step 3: Define prediction function
+def predict_rating(release_year, duration):
+    input_df = pd.DataFrame([[release_year, duration]], columns=['release_year', 'duration'])
+    prediction = model.predict(input_df)[0]
+    return round(prediction, 2)
+!pip install gradio
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import gradio as gr
+
+# Step 1: Create and prepare the dataset
+data = {
+    'release_year': [2015, 2018, 2020, 2012, 2016],
+    'duration': [120, 90, 150, 110, 100],
+    'rating': [7.5, 6.8, 8.0, 7.0, 6.5]
+}
+
+df = pd.DataFrame(data)
+X = df[['release_year', 'duration']]
+y = df['rating']
+
+# Step 2: Train the model
+model = LinearRegression()
+model.fit(X, y)
+
+# Step 3: Define prediction function
+def predict_rating(release_year, duration):
+    input_df = pd.DataFrame([[release_year, duration]], columns=['release_year', 'duration'])
+    prediction = model.predict(input_df)[0]
+    return round(prediction, 2)
+
+# Step 4: Create Gradio interface
+interface = gr.Interface(
+    fn=predict_rating,
+    inputs=[
+        gr.Number(label="Release Year"),
+        gr.Number(label="Duration (minutes)")
+    ],
+    outputs=gr.Number(label="Predicted Rating"),
+    title="🎬 Movie Rating Predictor",
+    description="Enter the movie's release year and duration to predict its rating."
+)
+
+# Step 5: Launch the app
+interface.launch()
+
+# Step 4: Create Gradio interface
